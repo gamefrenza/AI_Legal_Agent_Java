@@ -30,6 +30,9 @@ public class DocumentService {
     @Autowired
     private DocumentRepository documentRepository;
 
+    @Autowired
+    private RoleBasedAccessService roleBasedAccessService;
+
     private final Tika tika = new Tika();
 
     /**
@@ -152,6 +155,40 @@ public class DocumentService {
     }
 
     /**
+     * Retrieves a document by ID with explicit RBAC enforcement
+     * Uses RoleBasedAccessService to verify user has required role
+     * 
+     * @param id The document ID
+     * @param requiredRole The role required to access the document (e.g., "LAWYER", "ADMIN")
+     * @return Optional containing the document if found and user has access
+     * @throws org.springframework.security.access.AccessDeniedException if user lacks required role
+     */
+    public Optional<Document> getDocumentByIdWithRoleCheck(Long id, String requiredRole) {
+        // Enforce RBAC using RoleBasedAccessService
+        roleBasedAccessService.canAccessDocument(id, requiredRole);
+        
+        // If no exception was thrown, user has access
+        return documentRepository.findById(id);
+    }
+
+    /**
+     * Retrieves a document by ID with flexible role requirements
+     * User needs any ONE of the specified roles to access
+     * 
+     * @param id The document ID
+     * @param requiredRoles Array of roles, any of which grants access
+     * @return Optional containing the document if found and user has access
+     * @throws org.springframework.security.access.AccessDeniedException if user lacks any required role
+     */
+    public Optional<Document> getDocumentByIdWithAnyRole(Long id, String... requiredRoles) {
+        // Enforce RBAC using RoleBasedAccessService
+        roleBasedAccessService.canAccessDocumentWithAnyRole(id, requiredRoles);
+        
+        // If no exception was thrown, user has access
+        return documentRepository.findById(id);
+    }
+
+    /**
      * Deletes a document by ID - restricted to ADMIN role only
      * 
      * @param id The document ID to delete
@@ -162,6 +199,31 @@ public class DocumentService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         logger.info("Document deletion request: ID={} by user={}", id, auth.getName());
 
+        Optional<Document> document = documentRepository.findById(id);
+        
+        if (document.isPresent()) {
+            documentRepository.deleteById(id);
+            auditLogger.warn("DOCUMENT_DELETED: User={}, DocumentId={}, FileName={}",
+                    auth.getName(), id, document.get().getFileName());
+            logger.info("Document deleted: ID={}", id);
+        } else {
+            logger.warn("Attempted to delete non-existent document: ID={}", id);
+        }
+    }
+
+    /**
+     * Deletes a document with explicit RBAC enforcement
+     * Uses RoleBasedAccessService to verify user has ADMIN role
+     * 
+     * @param id The document ID to delete
+     * @throws org.springframework.security.access.AccessDeniedException if user is not ADMIN
+     */
+    @Transactional
+    public void deleteDocumentWithRoleCheck(Long id) {
+        // Enforce RBAC - only ADMIN can delete
+        roleBasedAccessService.canAccessDocument(id, "ADMIN");
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Optional<Document> document = documentRepository.findById(id);
         
         if (document.isPresent()) {
