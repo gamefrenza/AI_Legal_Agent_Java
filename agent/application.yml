@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/legaldb
+    username: ${DB_USER}
+    password: ${DB_PASS}
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+openai:
+  api-key: ${OPENAI_API_KEY}
+
+logging:
+  level:
+    com.legalai: DEBUG  # For audits
