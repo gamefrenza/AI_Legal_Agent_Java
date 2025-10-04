@@ -34,8 +34,25 @@ spring:
 openai:
   api-key: ${OPENAI_API_KEY}
 
+compliance:
+  rules:
+    file: classpath:compliance-rules.json
+    autoload: true
+
+# Cache configuration for performance optimization
+spring:
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=30m,expireAfterAccess=10m
+    cache-names:
+      - complianceRules
+      - jurisdictionPrompts
+      - aiAnalysisResults
+
 logging:
   level:
     com.legalai: DEBUG
     org.springframework.security: INFO
     org.hibernate.SQL: DEBUG
+    org.springframework.cache: DEBUG

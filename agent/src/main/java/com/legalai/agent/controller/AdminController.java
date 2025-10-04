@@ -49,6 +49,9 @@ public class AdminController {
     private ComplianceRuleRepository complianceRuleRepository;
 
     @Autowired
+    private ComplianceRuleLoaderService complianceRuleLoaderService;
+
+    @Autowired
     private InMemoryUserDetailsManager userDetailsManager;
 
     @Autowired
@@ -535,6 +538,152 @@ public class AdminController {
             logger.error("Failed to delete compliance rule: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Rule deletion failed: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Reload compliance rules from JSON file
+     * 
+     * @return Number of rules loaded
+     */
+    @PostMapping("/compliance/rules/reload")
+    public ResponseEntity<?> reloadComplianceRules() {
+        logger.info("Admin reload compliance rules request");
+        
+        try {
+            int loadedCount = complianceRuleLoaderService.reloadRules();
+            
+            auditLogger.warn("ADMIN_RULES_RELOADED: Count={}", loadedCount);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Compliance rules reloaded successfully",
+                "rulesLoaded", loadedCount
+            ));
+            
+        } catch (Exception e) {
+            logger.error("Failed to reload compliance rules: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to reload rules: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get compliance rule statistics
+     * 
+     * @return Rule statistics by jurisdiction and severity
+     */
+    @GetMapping("/compliance/rules/statistics")
+    public ResponseEntity<?> getComplianceRuleStatistics() {
+        logger.info("Admin compliance rule statistics request");
+        
+        try {
+            ComplianceRuleLoaderService.RuleStatistics stats = 
+                    complianceRuleLoaderService.getRuleStatistics();
+            
+            auditLogger.info("ADMIN_COMPLIANCE_STATS_ACCESS: TotalRules={}", stats.getTotalRules());
+            
+            return ResponseEntity.ok(stats);
+            
+        } catch (Exception e) {
+            logger.error("Failed to get compliance statistics: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to get statistics: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Load compliance rules from JSON string
+     * Useful for importing custom rule sets
+     * 
+     * @param request JSON content with rules
+     * @return Number of rules loaded
+     */
+    @PostMapping("/compliance/rules/import")
+    public ResponseEntity<?> importComplianceRules(@RequestBody Map<String, String> request) {
+        logger.info("Admin import compliance rules request");
+        
+        try {
+            String jsonContent = request.get("jsonContent");
+            
+            if (jsonContent == null || jsonContent.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "JSON content is required"));
+            }
+            
+            int loadedCount = complianceRuleLoaderService.loadRulesFromString(jsonContent);
+            
+            auditLogger.warn("ADMIN_RULES_IMPORTED: Count={}", loadedCount);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Compliance rules imported successfully",
+                "rulesLoaded", loadedCount
+            ));
+            
+        } catch (Exception e) {
+            logger.error("Failed to import compliance rules: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to import rules: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get rules by jurisdiction
+     * 
+     * @param jurisdiction Jurisdiction code
+     * @return List of rules for jurisdiction
+     */
+    @GetMapping("/compliance/rules/jurisdiction/{jurisdiction}")
+    public ResponseEntity<?> getRulesByJurisdiction(@PathVariable String jurisdiction) {
+        logger.info("Admin get rules by jurisdiction request: {}", jurisdiction);
+        
+        try {
+            List<ComplianceRule> rules = complianceRuleRepository
+                    .findByJurisdictionAndActive(jurisdiction, true);
+            
+            auditLogger.info("ADMIN_RULES_BY_JURISDICTION: Jurisdiction={}, Count={}", 
+                    jurisdiction, rules.size());
+            
+            return ResponseEntity.ok(rules);
+            
+        } catch (Exception e) {
+            logger.error("Failed to get rules by jurisdiction: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to get rules: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Toggle rule active status
+     * 
+     * @param id Rule ID
+     * @return Updated rule
+     */
+    @PatchMapping("/compliance/rules/{id}/toggle")
+    public ResponseEntity<?> toggleRuleStatus(@PathVariable Long id) {
+        logger.info("Admin toggle rule status request: id={}", id);
+        
+        try {
+            Optional<ComplianceRule> ruleOpt = complianceRuleRepository.findById(id);
+            
+            if (ruleOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            ComplianceRule rule = ruleOpt.get();
+            rule.setActive(!rule.getActive());
+            ComplianceRule updatedRule = complianceRuleRepository.save(rule);
+            
+            auditLogger.warn("ADMIN_RULE_TOGGLED: RuleId={}, RuleName={}, Active={}", 
+                    id, rule.getRuleName(), rule.getActive());
+            
+            return ResponseEntity.ok(updatedRule);
+            
+        } catch (Exception e) {
+            logger.error("Failed to toggle rule status: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to toggle rule: " + e.getMessage()));
         }
     }
 

@@ -15,11 +15,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -124,7 +127,9 @@ public class LegalAiService {
      * @param jurisdiction The jurisdiction to analyze under (e.g., "US-CA", "EU")
      * @return ContractAnalysisResult with risks, ambiguities, and suggestions
      */
-    public ContractAnalysisResult analyzeContract(String docText, String jurisdiction) {
+    @Async
+    @Cacheable(value = "aiAnalysisResults", key = "#docText.hashCode() + '_' + #jurisdiction")
+    public CompletableFuture<ContractAnalysisResult> analyzeContract(String docText, String jurisdiction) {
         logger.info("Starting contract analysis for jurisdiction: {}", jurisdiction);
         
         try {
@@ -168,11 +173,11 @@ public class LegalAiService {
                     result.getSuggestions().size());
             
             logger.info("Contract analysis completed successfully");
-            return result;
+            return CompletableFuture.completedFuture(result);
             
         } catch (Exception e) {
             logger.error("Failed to analyze contract: {}", e.getMessage(), e);
-            throw new RuntimeException("Contract analysis failed", e);
+            return CompletableFuture.failedFuture(new RuntimeException("Contract analysis failed", e));
         }
     }
 
@@ -184,7 +189,9 @@ public class LegalAiService {
      * @param jurisdiction The jurisdiction to research in
      * @return LegalResearchResult with findings and citations
      */
-    public LegalResearchResult researchTopic(String query, String jurisdiction) {
+    @Async
+    @Cacheable(value = "aiAnalysisResults", key = "#query.hashCode() + '_' + #jurisdiction")
+    public CompletableFuture<LegalResearchResult> researchTopic(String query, String jurisdiction) {
         logger.info("Starting legal research: {} in jurisdiction: {}", query, jurisdiction);
         
         try {
@@ -245,11 +252,11 @@ public class LegalAiService {
                     query, jurisdiction, result.getSources().size());
             
             logger.info("Legal research completed successfully");
-            return result;
+            return CompletableFuture.completedFuture(result);
             
         } catch (Exception e) {
             logger.error("Failed to conduct legal research: {}", e.getMessage(), e);
-            throw new RuntimeException("Legal research failed", e);
+            return CompletableFuture.failedFuture(new RuntimeException("Legal research failed", e));
         }
     }
 
@@ -260,7 +267,9 @@ public class LegalAiService {
      * @param docText The document text to assess
      * @return RiskAssessmentResult with categorized risk scores
      */
-    public RiskAssessmentResult riskAssessment(String docText) {
+    @Async
+    @Cacheable(value = "aiAnalysisResults", key = "#docText.hashCode()")
+    public CompletableFuture<RiskAssessmentResult> riskAssessment(String docText) {
         logger.info("Starting risk assessment");
         
         try {
@@ -334,11 +343,11 @@ public class LegalAiService {
                     result.getCriticalIssues().size());
             
             logger.info("Risk assessment completed successfully");
-            return result;
+            return CompletableFuture.completedFuture(result);
             
         } catch (Exception e) {
             logger.error("Failed to perform risk assessment: {}", e.getMessage(), e);
-            throw new RuntimeException("Risk assessment failed", e);
+            return CompletableFuture.failedFuture(new RuntimeException("Risk assessment failed", e));
         }
     }
 
@@ -351,7 +360,9 @@ public class LegalAiService {
      * @param jurisdiction The jurisdiction to validate against
      * @return ComplianceValidationResult with passes and fails
      */
-    public ComplianceValidationResult validateComplianceAi(String docText, String jurisdiction) {
+    @Async
+    @Cacheable(value = "aiAnalysisResults", key = "#docText.hashCode() + '_' + #jurisdiction")
+    public CompletableFuture<ComplianceValidationResult> validateComplianceAi(String docText, String jurisdiction) {
         logger.info("Starting AI-powered compliance validation for jurisdiction: {}", jurisdiction);
         
         try {
@@ -413,17 +424,19 @@ public class LegalAiService {
                     ruleBasedViolations.size());
             
             logger.info("AI compliance validation completed successfully");
-            return result;
+            return CompletableFuture.completedFuture(result);
             
         } catch (Exception e) {
             logger.error("Failed to validate compliance with AI: {}", e.getMessage(), e);
-            throw new RuntimeException("AI compliance validation failed", e);
+            return CompletableFuture.failedFuture(new RuntimeException("AI compliance validation failed", e));
         }
     }
 
     /**
      * Builds context of rules and regulations for a jurisdiction
+     * Cached to avoid repeated database queries
      */
+    @Cacheable(value = "jurisdictionPrompts", key = "#jurisdiction")
     private String buildRulesContext(String jurisdiction) {
         StringBuilder context = new StringBuilder();
         

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * REST Controller for document management and legal AI operations
@@ -81,17 +82,19 @@ public class DocumentController {
                 try {
                     String decryptedText = savedDocument.decryptContent();
                     
-                    // Contract analysis
-                    LegalAiService.ContractAnalysisResult analysisResult = 
+                    // Contract analysis (async)
+                    CompletableFuture<LegalAiService.ContractAnalysisResult> analysisFuture = 
                             legalAiService.analyzeContract(decryptedText, jurisdiction);
                     
-                    response.put("analysis", analysisResult);
-                    
-                    // Risk assessment
-                    LegalAiService.RiskAssessmentResult riskResult = 
+                    // Risk assessment (async)
+                    CompletableFuture<LegalAiService.RiskAssessmentResult> riskFuture = 
                             legalAiService.riskAssessment(decryptedText);
                     
-                    response.put("riskAssessment", riskResult);
+                    // Wait for both analyses to complete
+                    CompletableFuture.allOf(analysisFuture, riskFuture).join();
+                    
+                    response.put("analysis", analysisFuture.get());
+                    response.put("riskAssessment", riskFuture.get());
                     
                     logger.info("Document uploaded and analyzed successfully: ID={}", savedDocument.getId());
                     
@@ -127,9 +130,10 @@ public class DocumentController {
         logger.info("Legal research request: query={}, jurisdiction={}", query, jurisdiction);
         
         try {
-            LegalAiService.LegalResearchResult result = 
+            CompletableFuture<LegalAiService.LegalResearchResult> resultFuture = 
                     legalAiService.researchTopic(query, jurisdiction);
             
+            LegalAiService.LegalResearchResult result = resultFuture.get();
             return ResponseEntity.ok(result);
             
         } catch (Exception e) {
@@ -208,10 +212,11 @@ public class DocumentController {
             Document document = docOpt.get();
             String decryptedText = document.decryptContent();
             
-            // Run AI analysis
-            LegalAiService.ContractAnalysisResult analysisResult = 
+            // Run AI analysis (async)
+            CompletableFuture<LegalAiService.ContractAnalysisResult> analysisFuture = 
                     legalAiService.analyzeContract(decryptedText, document.getJurisdiction());
             
+            LegalAiService.ContractAnalysisResult analysisResult = analysisFuture.get();
             return ResponseEntity.ok(analysisResult);
             
         } catch (Exception e) {

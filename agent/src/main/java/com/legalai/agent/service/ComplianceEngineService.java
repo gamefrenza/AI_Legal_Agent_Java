@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -54,13 +56,14 @@ public class ComplianceEngineService {
      * @param jurisdiction The jurisdiction to check against
      * @return List of compliance violations found
      */
+    @Cacheable(value = "complianceRules", key = "#jurisdiction + '_' + #docText.hashCode()")
     public List<ComplianceViolation> checkCompliance(String docText, String jurisdiction) {
         logger.info("Starting compliance check for jurisdiction: {}", jurisdiction);
         
         List<ComplianceViolation> violations = new ArrayList<>();
         
-        // Load active rules for jurisdiction
-        List<ComplianceRule> rules = complianceRuleRepository.findByJurisdictionAndActive(jurisdiction, true);
+        // Load active rules for jurisdiction using cached method
+        List<ComplianceRule> rules = getActiveRulesForJurisdiction(jurisdiction);
         logger.debug("Loaded {} active rules for jurisdiction: {}", rules.size(), jurisdiction);
         
         // Check each rule
@@ -82,6 +85,38 @@ public class ComplianceEngineService {
         
         logger.info("Compliance check completed. Found {} violations", violations.size());
         return violations;
+    }
+
+    /**
+     * Loads active compliance rules for a jurisdiction
+     * Cached to avoid repeated database queries
+     * 
+     * @param jurisdiction The jurisdiction to load rules for
+     * @return List of active compliance rules
+     */
+    @Cacheable(value = "complianceRules", key = "#jurisdiction")
+    public List<ComplianceRule> getActiveRulesForJurisdiction(String jurisdiction) {
+        logger.debug("Loading active rules for jurisdiction: {}", jurisdiction);
+        return complianceRuleRepository.findByJurisdictionAndActive(jurisdiction, true);
+    }
+
+    /**
+     * Evicts compliance rules cache when rules are updated
+     * Called by ComplianceRuleLoaderService when rules are reloaded
+     */
+    @CacheEvict(value = "complianceRules", allEntries = true)
+    public void evictComplianceRulesCache() {
+        logger.info("Evicting compliance rules cache");
+    }
+
+    /**
+     * Evicts specific jurisdiction cache entry
+     * 
+     * @param jurisdiction The jurisdiction to evict
+     */
+    @CacheEvict(value = "complianceRules", key = "#jurisdiction")
+    public void evictJurisdictionCache(String jurisdiction) {
+        logger.info("Evicting compliance rules cache for jurisdiction: {}", jurisdiction);
     }
 
     /**
