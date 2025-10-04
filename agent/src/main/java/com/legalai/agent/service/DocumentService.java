@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -32,6 +33,9 @@ public class DocumentService {
 
     @Autowired
     private RoleBasedAccessService roleBasedAccessService;
+
+    @Autowired
+    private ComplianceEngineService complianceEngineService;
 
     private final Tika tika = new Tika();
 
@@ -81,13 +85,14 @@ public class DocumentService {
     /**
      * Securely stores a document by:
      * 1. Parsing content with Apache Tika
-     * 2. Encrypting the text using the Document entity's encrypt method
-     * 3. Saving to repository
-     * 4. Logging the action for audit
+     * 2. Running data protection scan and compliance checks
+     * 3. Encrypting the text using the Document entity's encrypt method
+     * 4. Saving to repository
+     * 5. Logging the action for audit
      * 
      * @param file The multipart file to store
      * @return The document entity (not yet saved to database)
-     * @throws Exception if parsing or encryption fails
+     * @throws Exception if parsing, compliance, or encryption fails
      */
     @Transactional
     public Document secureStoreDocument(MultipartFile file) throws Exception {
@@ -105,11 +110,28 @@ public class DocumentService {
             throw new Exception("Failed to parse document content", e);
         }
 
-        // Step 2: Create Document entity
+        // Step 2: Run data protection scan to detect and mask sensitive data
+        ComplianceEngineService.DataProtectionReport protectionReport = 
+                complianceEngineService.dataProtectionScan(extractedText);
+        
+        if (protectionReport.getSensitiveDataCount() > 0) {
+            logger.warn("Data protection scan found {} sensitive items in file: {}", 
+                    protectionReport.getSensitiveDataCount(), fileName);
+            auditLogger.warn("SENSITIVE_DATA_DETECTED: FileName={}, SensitiveItems={}, Types={}",
+                    fileName, protectionReport.getSensitiveDataCount(),
+                    protectionReport.getSensitiveDataMatches().stream()
+                        .map(ComplianceEngineService.SensitiveDataMatch::getType)
+                        .distinct().toArray());
+            
+            // Use protected text instead of original
+            extractedText = protectionReport.getProtectedText();
+        }
+
+        // Step 3: Create Document entity
         Document document = new Document();
         document.setFileName(fileName);
 
-        // Step 3: Encrypt the extracted text using Document entity's encrypt method
+        // Step 4: Encrypt the extracted (and protected) text using Document entity's encrypt method
         try {
             document.encryptContent(extractedText);
             logger.debug("Successfully encrypted content for file: {}", fileName);
@@ -119,16 +141,114 @@ public class DocumentService {
             throw new Exception("Failed to encrypt document content", e);
         }
 
-        // Step 4: Log the action for audit
+        // Step 5: Log the action for audit
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = (auth != null) ? auth.getName() : "SYSTEM";
         
-        auditLogger.info("DOCUMENT_SECURED: User={}, FileName={}, OriginalSize={} bytes, EncryptedSize={} bytes, Timestamp={}",
+        auditLogger.info("DOCUMENT_SECURED: User={}, FileName={}, OriginalSize={} bytes, EncryptedSize={} bytes, SensitiveDataMasked={}, Timestamp={}",
                 username, fileName, file.getSize(), 
-                document.getEncryptedContent().length(), LocalDateTime.now());
+                document.getEncryptedContent().length(),
+                protectionReport.getSensitiveDataCount(),
+                LocalDateTime.now());
 
         logger.info("Document secured successfully: {}", fileName);
         return document;
+    }
+
+    /**
+     * Securely stores a document with explicit compliance check against jurisdiction rules
+     * 
+     * @param file The multipart file to store
+     * @param jurisdiction The jurisdiction to check compliance against
+     * @return The document entity with compliance report
+     * @throws Exception if compliance violations are found or storage fails
+     */
+    @Transactional
+    public DocumentComplianceResult secureStoreDocumentWithCompliance(MultipartFile file, String jurisdiction) throws Exception {
+        String fileName = file.getOriginalFilename();
+        logger.info("Starting secure storage with compliance check for file: {} in jurisdiction: {}", fileName, jurisdiction);
+
+        // Parse document content
+        String extractedText;
+        try (InputStream inputStream = file.getInputStream()) {
+            extractedText = tika.parseToString(inputStream);
+        } catch (IOException | TikaException e) {
+            throw new Exception("Failed to parse document content", e);
+        }
+
+        // Run compliance check
+        List<ComplianceEngineService.ComplianceViolation> violations = 
+                complianceEngineService.checkCompliance(extractedText, jurisdiction);
+        
+        // Run data protection scan
+        ComplianceEngineService.DataProtectionReport protectionReport = 
+                complianceEngineService.dataProtectionScan(extractedText);
+        
+        // Store document with protected text
+        Document document = new Document();
+        document.setFileName(fileName);
+        document.setJurisdiction(jurisdiction);
+        document.encryptContent(protectionReport.getProtectedText());
+        
+        // Log compliance results
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = (auth != null) ? auth.getName() : "SYSTEM";
+        
+        auditLogger.warn("COMPLIANCE_CHECK_COMPLETE: User={}, FileName={}, Jurisdiction={}, Violations={}, SensitiveData={}, Timestamp={}",
+                username, fileName, jurisdiction, violations.size(), 
+                protectionReport.getSensitiveDataCount(), LocalDateTime.now());
+        
+        // Return result
+        DocumentComplianceResult result = new DocumentComplianceResult();
+        result.setDocument(document);
+        result.setViolations(violations);
+        result.setProtectionReport(protectionReport);
+        result.setCompliant(violations.isEmpty());
+        
+        return result;
+    }
+
+    /**
+     * Inner class for document compliance results
+     */
+    public static class DocumentComplianceResult {
+        private Document document;
+        private List<ComplianceEngineService.ComplianceViolation> violations;
+        private ComplianceEngineService.DataProtectionReport protectionReport;
+        private boolean compliant;
+
+        // Getters and Setters
+        public Document getDocument() {
+            return document;
+        }
+
+        public void setDocument(Document document) {
+            this.document = document;
+        }
+
+        public List<ComplianceEngineService.ComplianceViolation> getViolations() {
+            return violations;
+        }
+
+        public void setViolations(List<ComplianceEngineService.ComplianceViolation> violations) {
+            this.violations = violations;
+        }
+
+        public ComplianceEngineService.DataProtectionReport getProtectionReport() {
+            return protectionReport;
+        }
+
+        public void setProtectionReport(ComplianceEngineService.DataProtectionReport protectionReport) {
+            this.protectionReport = protectionReport;
+        }
+
+        public boolean isCompliant() {
+            return compliant;
+        }
+
+        public void setCompliant(boolean compliant) {
+            this.compliant = compliant;
+        }
     }
 
     /**
