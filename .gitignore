@@ -22,3 +22,21 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+agent/target/surefire-reports/TEST-com.legalai.agent.service.DocumentServiceTest.xml
+agent/target/agent-1.0-SNAPSHOT.jar.original
+agent/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst
+agent/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst
+agent/target/surefire-reports/com.legalai.agent.service.DocumentServiceTest.txt
+agent/target/surefire-reports/TEST-com.legalai.agent.service.DocumentServiceTest.xml
+agent/target/test-classes/application-test.yml
+agent/target/classes/compliance-rules.json
+agent/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst
+agent/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst
+agent/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst
+agent/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst
+agent/target/classes/templates/index.html
+agent/target/classes/static/js/app.js
+agent/target/classes/static/css/styles.css
+agent/target/classes/static/index.html
+agent/target/classes/compliance-rules.json
+agent/target/classes/compliance-rules.json
