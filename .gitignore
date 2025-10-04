@@ -40,3 +40,4 @@ agent/target/classes/static/css/styles.css
 agent/target/classes/static/index.html
 agent/target/classes/compliance-rules.json
 agent/target/classes/compliance-rules.json
+agent/target/maven-archiver/pom.properties
