@@ -3,16 +3,39 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/legaldb
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/legaldb}
     username: ${DB_USER}
     password: ${DB_PASS}
+    driver-class-name: org.postgresql.Driver
+  
   jpa:
     hibernate:
       ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  # Redis configuration for session management
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 60000
+  
+  session:
+    store-type: redis
+    redis:
+      flush-mode: on_save
+      namespace: spring:session
 
 openai:
   api-key: ${OPENAI_API_KEY}
 
 logging:
   level:
-    com.legalai: DEBUG  # For audits
+    com.legalai: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
