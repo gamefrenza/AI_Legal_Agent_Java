@@ -31,6 +31,15 @@ spring:
       flush-mode: on_save
       namespace: spring:session
 
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=30m,expireAfterAccess=10m
+    cache-names:
+      - complianceRules
+      - jurisdictionPrompts
+      - aiAnalysisResults
+
 openai:
   api-key: ${OPENAI_API_KEY}
 
@@ -40,15 +49,6 @@ compliance:
     autoload: true
 
 # Cache configuration for performance optimization
-spring:
-  cache:
-    type: caffeine
-    caffeine:
-      spec: maximumSize=1000,expireAfterWrite=30m,expireAfterAccess=10m
-    cache-names:
-      - complianceRules
-      - jurisdictionPrompts
-      - aiAnalysisResults
 
 logging:
   level:
