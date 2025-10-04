@@ -82,8 +82,9 @@ public class HomeController {
             if ("on".equals(analyze)) {
                 try {
                     String decryptedText = result.getDocument().decryptContent();
-                    LegalAiService.ContractAnalysisResult analysisResult = 
+                    java.util.concurrent.CompletableFuture<LegalAiService.ContractAnalysisResult> analysisFuture = 
                             legalAiService.analyzeContract(decryptedText, jurisdiction);
+                    LegalAiService.ContractAnalysisResult analysisResult = analysisFuture.get();
                     
                     message.append("🤖 AI Analysis complete: ")
                            .append(analysisResult.getRisks().size())

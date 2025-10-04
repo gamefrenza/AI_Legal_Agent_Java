@@ -208,7 +208,7 @@ public class RoleBasedAccessService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         
         if (auth == null || !auth.isAuthenticated()) {
-            return Collection.of();
+            return java.util.Collections.emptyList();
         }
 
         return auth.getAuthorities().stream()

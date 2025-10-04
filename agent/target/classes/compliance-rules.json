@@ -1,0 +1,229 @@
+{
+  "rules": [
+    {
+      "jurisdiction": "US-CA",
+      "ruleName": "CCPA_EMAIL",
+      "description": "California Consumer Privacy Act - Email data collection requires explicit consent notice",
+      "regexPattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "US-CA",
+      "ruleName": "CCPA_PERSONAL_INFO",
+      "description": "CCPA requires disclosure of personal information collection practices",
+      "regexPattern": "(?i)(social security|ssn|driver.?license|passport)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "US-CA",
+      "ruleName": "CCPA_SALE_DISCLOSURE",
+      "description": "CCPA requires disclosure if personal information is sold or shared",
+      "regexPattern": "(?i)(sell|share|disclose).{0,50}(personal|information|data)",
+      "severity": "MEDIUM",
+      "active": true
+    },
+    {
+      "jurisdiction": "EU",
+      "ruleName": "GDPR_EMAIL",
+      "description": "EU GDPR - Email addresses are personal data requiring lawful basis",
+      "regexPattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "EU",
+      "ruleName": "GDPR_DATA_TRANSFER",
+      "description": "GDPR Article 44 - International data transfers require safeguards",
+      "regexPattern": "(?i)(transfer|transmit).{0,50}(outside|international|third.?country)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "EU",
+      "ruleName": "GDPR_CONSENT",
+      "description": "GDPR Article 7 - Consent must be freely given, specific, informed and unambiguous",
+      "regexPattern": "(?i)(consent|agree|accept).{0,30}(terms|conditions|policy)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "EU",
+      "ruleName": "GDPR_RIGHT_TO_DELETE",
+      "description": "GDPR Article 17 - Right to erasure must be provided",
+      "regexPattern": "(?i)(delete|erase|remove).{0,30}(data|information|account)",
+      "severity": "MEDIUM",
+      "active": true
+    },
+    {
+      "jurisdiction": "UK",
+      "ruleName": "UK_GDPR_EMAIL",
+      "description": "UK GDPR - Personal data protection for email addresses",
+      "regexPattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "UK",
+      "ruleName": "UK_GDPR_DATA_PROTECTION",
+      "description": "UK Data Protection Act 2018 - Lawful basis for processing",
+      "regexPattern": "(?i)(process|collect|use).{0,50}(personal|sensitive).{0,20}(data|information)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "UK",
+      "ruleName": "UK_GDPR_INTERNATIONAL_TRANSFER",
+      "description": "UK GDPR - International data transfers post-Brexit",
+      "regexPattern": "(?i)(transfer|export).{0,50}(data|information).{0,50}(EU|EEA|international)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "US",
+      "ruleName": "HIPAA_PHI",
+      "description": "HIPAA - Protected Health Information must be secured",
+      "regexPattern": "(?i)(patient|medical|health).{0,30}(record|information|data)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "US",
+      "ruleName": "HIPAA_MEDICAL_RECORD",
+      "description": "HIPAA - Medical record numbers are PHI",
+      "regexPattern": "\\b(MRN|medical.?record.?number)[:\\s]*\\d{6,10}\\b",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "US",
+      "ruleName": "HIPAA_DISCLOSURE",
+      "description": "HIPAA - PHI disclosure requires authorization",
+      "regexPattern": "(?i)(disclose|share|release).{0,50}(medical|health|patient).{0,30}(information|record|data)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "US",
+      "ruleName": "COPPA_CHILDREN",
+      "description": "COPPA - Children's Online Privacy Protection Act",
+      "regexPattern": "(?i)(child|children|minor|under.?13).{0,50}(data|information|consent)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "US-NY",
+      "ruleName": "NY_SHIELD_ACT",
+      "description": "NY SHIELD Act - Data breach notification requirements",
+      "regexPattern": "(?i)(breach|unauthorized.?access).{0,50}(personal|private|sensitive).{0,30}(data|information)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "US-NY",
+      "ruleName": "NY_SSN_PROTECTION",
+      "description": "New York SSN Protection Law",
+      "regexPattern": "\\b\\d{3}-\\d{2}-\\d{4}\\b",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "CANADA",
+      "ruleName": "PIPEDA_CONSENT",
+      "description": "PIPEDA - Personal Information Protection and Electronic Documents Act",
+      "regexPattern": "(?i)(collect|use|disclose).{0,50}(personal).{0,30}(information|data)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "CANADA",
+      "ruleName": "PIPEDA_EMAIL",
+      "description": "PIPEDA - Email addresses require consent for use",
+      "regexPattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+      "severity": "MEDIUM",
+      "active": true
+    },
+    {
+      "jurisdiction": "AUSTRALIA",
+      "ruleName": "PRIVACY_ACT_APP",
+      "description": "Australian Privacy Act - Australian Privacy Principles",
+      "regexPattern": "(?i)(collect|use|disclose).{0,50}(personal).{0,30}(information)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "BRAZIL",
+      "ruleName": "LGPD_CONSENT",
+      "description": "LGPD - Lei Geral de Proteção de Dados (Brazil)",
+      "regexPattern": "(?i)(consentimento|dados.?pessoais|informações.?pessoais)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "GLOBAL",
+      "ruleName": "PII_EMAIL",
+      "description": "Global PII Protection - Email addresses",
+      "regexPattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+      "severity": "MEDIUM",
+      "active": true
+    },
+    {
+      "jurisdiction": "GLOBAL",
+      "ruleName": "PII_PHONE",
+      "description": "Global PII Protection - Phone numbers",
+      "regexPattern": "\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b",
+      "severity": "MEDIUM",
+      "active": true
+    },
+    {
+      "jurisdiction": "GLOBAL",
+      "ruleName": "PII_CREDIT_CARD",
+      "description": "Global PCI DSS - Credit card number protection",
+      "regexPattern": "\\b\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}\\b",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "GLOBAL",
+      "ruleName": "CONFIDENTIALITY_CLAUSE",
+      "description": "Standard confidentiality clause verification",
+      "regexPattern": "(?i)(confidential|proprietary).{0,50}(information|data|material)",
+      "severity": "LOW",
+      "active": true
+    },
+    {
+      "jurisdiction": "US",
+      "ruleName": "GLBA_FINANCIAL",
+      "description": "Gramm-Leach-Bliley Act - Financial privacy",
+      "regexPattern": "(?i)(financial|bank|account).{0,50}(information|data|record)",
+      "severity": "HIGH",
+      "active": true
+    },
+    {
+      "jurisdiction": "US",
+      "ruleName": "FERPA_EDUCATION",
+      "description": "FERPA - Family Educational Rights and Privacy Act",
+      "regexPattern": "(?i)(student|education).{0,50}(record|information|data)",
+      "severity": "HIGH",
+      "active": true
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "lastUpdated": "2024-01-15",
+    "description": "Comprehensive compliance rules for multiple jurisdictions",
+    "supportedJurisdictions": [
+      "US",
+      "US-CA",
+      "US-NY",
+      "EU",
+      "UK",
+      "CANADA",
+      "AUSTRALIA",
+      "BRAZIL",
+      "GLOBAL"
+    ]
+  }
+}
+

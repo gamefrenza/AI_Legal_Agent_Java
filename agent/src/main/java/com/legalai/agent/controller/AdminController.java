@@ -5,6 +5,7 @@ import com.legalai.agent.entity.ComplianceRule;
 import com.legalai.agent.repository.AuditLogRepository;
 import com.legalai.agent.repository.ComplianceRuleRepository;
 import com.legalai.agent.service.ActivityMonitorService;
+import com.legalai.agent.service.ComplianceRuleLoaderService;
 import com.legalai.agent.service.SessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -578,7 +579,7 @@ public class AdminController {
         logger.info("Admin compliance rule statistics request");
         
         try {
-            ComplianceRuleLoaderService.RuleStatistics stats = 
+            com.legalai.agent.service.ComplianceRuleLoaderService.RuleStatistics stats = 
                     complianceRuleLoaderService.getRuleStatistics();
             
             auditLogger.info("ADMIN_COMPLIANCE_STATS_ACCESS: TotalRules={}", stats.getTotalRules());

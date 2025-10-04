@@ -247,8 +247,9 @@ public class DocumentController {
             Document document = docOpt.get();
             String decryptedText = document.decryptContent();
             
-            LegalAiService.RiskAssessmentResult riskResult = 
+            java.util.concurrent.CompletableFuture<LegalAiService.RiskAssessmentResult> riskFuture = 
                     legalAiService.riskAssessment(decryptedText);
+            LegalAiService.RiskAssessmentResult riskResult = riskFuture.get();
             
             return ResponseEntity.ok(riskResult);
             
@@ -281,8 +282,9 @@ public class DocumentController {
             String decryptedText = document.decryptContent();
             
             // AI-powered compliance validation (merges with rule-based)
-            LegalAiService.ComplianceValidationResult complianceResult = 
+            java.util.concurrent.CompletableFuture<LegalAiService.ComplianceValidationResult> complianceFuture = 
                     legalAiService.validateComplianceAi(decryptedText, document.getJurisdiction());
+            LegalAiService.ComplianceValidationResult complianceResult = complianceFuture.get();
             
             return ResponseEntity.ok(complianceResult);
             
