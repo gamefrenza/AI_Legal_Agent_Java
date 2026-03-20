@@ -45,7 +45,7 @@ public class Document {
     private static final java.util.concurrent.atomic.AtomicReference<byte[]> AES_KEY =
         new java.util.concurrent.atomic.AtomicReference<>(
             // 32-byte default (AES-256). Overwritten by EncryptionConfig on startup.
-            "DefaultAES256KeyForLegalAgent!!".getBytes(StandardCharsets.UTF_8)
+            "DefaultAES256KeyForLegalAgent!!!".getBytes(StandardCharsets.UTF_8)
         );
     private static final byte[] INIT_VECTOR = "InitVector16byte".getBytes(StandardCharsets.UTF_8); // 128-bit IV
 
