@@ -372,5 +372,17 @@ public class DocumentService {
         return authorities.stream()
                 .anyMatch(authority -> authority.getAuthority().equals(role));
     }
+
+    @PreAuthorize("hasAnyRole('LAWYER', 'CLERK', 'ADMIN')")
+    public Page<Document> listAllDocuments(Pageable pageable) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        auditLogger.info("DOCUMENTS_LISTED: User={}", auth.getName());
+        return documentRepository.findAll(pageable);
+    }
+
+    @PreAuthorize("hasAnyRole('LAWYER', 'CLERK', 'ADMIN')")
+    public List<Document> listDocumentsByJurisdiction(String jurisdiction) {
+        return documentRepository.findByJurisdiction(jurisdiction);
+    }
 }
 
