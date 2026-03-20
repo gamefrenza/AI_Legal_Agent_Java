@@ -177,17 +177,25 @@ public class DocumentController {
      */
     @GetMapping("/list")
     @PreAuthorize("hasAnyRole('LAWYER', 'CLERK', 'ADMIN')")
-    public ResponseEntity<?> listDocuments() {
-        logger.info("List documents request");
-        
+    public ResponseEntity<?> listDocuments(
+            @RequestParam(value = "jurisdiction", required = false) String jurisdiction,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+
+        logger.info("List documents request: jurisdiction={}, page={}, size={}", jurisdiction, page, size);
+
         try {
-            // In production, add pagination and filtering
-            Iterable<Document> documents = documentService.getDocumentById(1L).stream().toList();
+            if (jurisdiction != null && !jurisdiction.isBlank()) {
+                return ResponseEntity.ok(documentService.listDocumentsByJurisdiction(jurisdiction));
+            }
+            Page<Document> documents = documentService.listAllDocuments(
+                    PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
             return ResponseEntity.ok(documents);
-            
+
         } catch (Exception e) {
             logger.error("Failed to list documents: {}", e.getMessage(), e);
-            return ResponseEntity.ok(new ArrayList<>());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to list documents: " + e.getMessage()));
         }
     }
 
