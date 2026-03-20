@@ -42,7 +42,11 @@ public class Document {
     // - AWS KMS, Azure Key Vault, or HashiCorp Vault
     // - Environment variables or secure configuration management
     // - Key rotation policies and secure key derivation functions (KDF)
-    private static final byte[] AES_KEY = "MySampleAESKey16".getBytes(StandardCharsets.UTF_8); // 128-bit key
+    private static final java.util.concurrent.atomic.AtomicReference<byte[]> AES_KEY =
+        new java.util.concurrent.atomic.AtomicReference<>(
+            // 32-byte default (AES-256). Overwritten by EncryptionConfig on startup.
+            "DefaultAES256KeyForLegalAgent!!".getBytes(StandardCharsets.UTF_8)
+        );
     private static final byte[] INIT_VECTOR = "InitVector16byte".getBytes(StandardCharsets.UTF_8); // 128-bit IV
 
     @PrePersist
@@ -72,7 +76,7 @@ public class Document {
             new CBCBlockCipher(new AESEngine())
         );
         
-        KeyParameter keyParam = new KeyParameter(AES_KEY);
+        KeyParameter keyParam = new KeyParameter(AES_KEY.get());
         ParametersWithIV params = new ParametersWithIV(keyParam, INIT_VECTOR);
         
         cipher.init(true, params);
@@ -105,7 +109,7 @@ public class Document {
             new CBCBlockCipher(new AESEngine())
         );
         
-        KeyParameter keyParam = new KeyParameter(AES_KEY);
+        KeyParameter keyParam = new KeyParameter(AES_KEY.get());
         ParametersWithIV params = new ParametersWithIV(keyParam, INIT_VECTOR);
         
         cipher.init(false, params);
@@ -175,6 +179,14 @@ public class Document {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    // Called once at startup by EncryptionConfig
+    public static void setEncryptionKey(byte[] key) {
+        if (key.length != 16 && key.length != 24 && key.length != 32) {
+            throw new IllegalArgumentException("AES key must be 16, 24, or 32 bytes. Got: " + key.length);
+        }
+        AES_KEY.set(key);
     }
 }
 
