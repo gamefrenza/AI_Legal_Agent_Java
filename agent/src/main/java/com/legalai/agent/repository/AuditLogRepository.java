@@ -34,5 +34,8 @@ public interface AuditLogRepository extends CrudRepository<AuditLog, Long> {
      * Finds recent audit logs ordered by timestamp descending
      */
     List<AuditLog> findTop100ByOrderByTimestampDesc();
+
+    // For hash chain: fetch the most recently saved entry
+    java.util.Optional<AuditLog> findFirstByOrderByIdDesc();
 }
 
