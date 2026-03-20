@@ -136,19 +136,70 @@ public class DocumentVersionService {
         if (oldContent == null) oldContent = "";
         if (newContent == null) newContent = "";
 
-        String[] oldLines = oldContent.split("\n");
-        String[] newLines = newContent.split("\n");
+        java.nio.file.Path tempRepoPath = null;
+        try {
+            tempRepoPath = java.nio.file.Files.createTempDirectory("legal-ai-diff-");
+            File repoDir = tempRepoPath.toFile();
 
-        StringBuilder diff = new StringBuilder();
-        diff.append("=== Diff Summary ===\n");
-        diff.append("Old content length: ").append(oldContent.length()).append(" characters\n");
-        diff.append("New content length: ").append(newContent.length()).append(" characters\n");
-        diff.append("Lines removed: ").append(oldLines.length).append("\n");
-        diff.append("Lines added: ").append(newLines.length).append("\n");
-        diff.append("\n--- Old Content ---\n").append(oldContent).append("\n");
-        diff.append("\n+++ New Content +++\n").append(newContent).append("\n");
+            try (Git git = Git.init().setDirectory(repoDir).call()) {
+                Repository repository = git.getRepository();
+                File docFile = new File(repoDir, "document.txt");
 
-        return diff.toString();
+                // Commit 1: old content
+                java.nio.file.Files.writeString(docFile.toPath(), oldContent, java.nio.charset.StandardCharsets.UTF_8);
+                git.add().addFilepattern("document.txt").call();
+                RevCommit oldCommit = git.commit()
+                        .setMessage("version-old")
+                        .setAuthor("legal-ai", "legal@ai.system")
+                        .call();
+
+                // Commit 2: new content
+                java.nio.file.Files.writeString(docFile.toPath(), newContent, java.nio.charset.StandardCharsets.UTF_8);
+                git.add().addFilepattern("document.txt").call();
+                RevCommit newCommit = git.commit()
+                        .setMessage("version-new")
+                        .setAuthor("legal-ai", "legal@ai.system")
+                        .call();
+
+                // Generate unified diff between the two commits
+                ByteArrayOutputStream diffOutput = new ByteArrayOutputStream();
+                try (DiffFormatter formatter = new DiffFormatter(diffOutput)) {
+                    formatter.setRepository(repository);
+
+                    try (ObjectReader reader = repository.newObjectReader()) {
+                        CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+                        oldTreeIter.reset(reader, oldCommit.getTree().getId());
+
+                        CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+                        newTreeIter.reset(reader, newCommit.getTree().getId());
+
+                        java.util.List<DiffEntry> diffs = formatter.scan(oldTreeIter, newTreeIter);
+                        formatter.format(diffs);
+                        formatter.flush();
+                    }
+                }
+
+                return diffOutput.toString(java.nio.charset.StandardCharsets.UTF_8);
+            }
+        } catch (Exception e) {
+            logger.error("JGit diff computation failed, falling back to summary: {}", e.getMessage());
+            return "=== Diff failed: " + e.getMessage() + "\nOld length: " + oldContent.length() +
+                   " chars\nNew length: " + newContent.length() + " chars";
+        } finally {
+            if (tempRepoPath != null) {
+                deleteDirectory(tempRepoPath.toFile());
+            }
+        }
+    }
+
+    private void deleteDirectory(File dir) {
+        if (dir.isDirectory()) {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File f : files) deleteDirectory(f);
+            }
+        }
+        dir.delete();
     }
 
     /**
