@@ -1,6 +1,7 @@
 package com.legalai.agent.config;
 
 import com.legalai.agent.security.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -9,7 +10,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
+import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -38,9 +41,9 @@ public class SecurityConfig {
      * - Basic Auth as fallback authentication
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, 
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtAuthenticationFilter jwtAuthenticationFilter,
-                                                   SessionRegistry sessionRegistry) throws Exception {
+                                                   SpringSessionBackedSessionRegistry<?> sessionRegistry) throws Exception {
         http
             // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
@@ -93,7 +96,7 @@ public class SecurityConfig {
      * - admin / admin123 (ROLE_ADMIN)
      */
     @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
         // Create lawyer user with LAWYER role
         UserDetails lawyer = User.builder()
                 .username("lawyer")
@@ -127,12 +130,13 @@ public class SecurityConfig {
     }
 
     /**
-     * SessionRegistry bean for tracking active user sessions
-     * Used for concurrent session control and session management
+     * Redis-backed SessionRegistry for cluster-aware concurrent session control.
+     * Backed by the auto-configured RedisIndexedSessionRepository, so
+     * .maximumSessions(1) is enforced across all application instances via Redis.
      */
     @Bean
-    public SessionRegistry sessionRegistry() {
-        return new SessionRegistryImpl();
+    public SpringSessionBackedSessionRegistry<?> sessionRegistry() {
+        return new SpringSessionBackedSessionRegistry<>(this.sessionRepository);
     }
 
     /**
@@ -144,5 +148,8 @@ public class SecurityConfig {
     public HttpSessionEventPublisher httpSessionEventPublisher() {
         return new HttpSessionEventPublisher();
     }
+
+    @Autowired
+    private FindByIndexNameSessionRepository<? extends Session> sessionRepository;
 }
 
