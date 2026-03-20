@@ -15,26 +15,34 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, updatable = false)
     private String user;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, length = 255, updatable = false)
     private String action;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime timestamp;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", updatable = false)
     private String details;
 
-    @Column(length = 50)
+    @Column(length = 50, updatable = false)
     private String outcome;
 
-    @Column(length = 255)
+    @Column(length = 255, updatable = false)
     private String methodName;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", updatable = false)
     private String arguments;
+
+    // SHA-256 hash of this entry's content — for tamper detection
+    @Column(length = 64, updatable = false)
+    private String contentHash;
+
+    // Hash of the previous entry's contentHash — forms a Merkle chain
+    @Column(length = 64, updatable = false)
+    private String previousEntryHash;
 
     @PrePersist
     protected void onCreate() {
@@ -117,6 +125,22 @@ public class AuditLog {
 
     public void setArguments(String arguments) {
         this.arguments = arguments;
+    }
+
+    public String getContentHash() {
+        return contentHash;
+    }
+
+    public void setContentHash(String contentHash) {
+        this.contentHash = contentHash;
+    }
+
+    public String getPreviousEntryHash() {
+        return previousEntryHash;
+    }
+
+    public void setPreviousEntryHash(String previousEntryHash) {
+        this.previousEntryHash = previousEntryHash;
     }
 }
 
