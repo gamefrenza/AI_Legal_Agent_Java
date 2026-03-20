@@ -1,4 +1,4 @@
-package com.legalai.agent.service;
+﻿package com.legalai.agent.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -213,11 +213,12 @@ public class LegalAiService {
                 jurisdiction, query
             );
             
-            ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(20);
 
-            chatMemory.add(new SystemMessage(systemPrompt));
-            chatMemory.add(new UserMessage(userPrompt));
-            String response = chatModel.generate(chatMemory.messages()).content().text();
+            // Per-request memory  not shared across concurrent calls
+            ChatMemory requestMemory = MessageWindowChatMemory.withMaxMessages(20);
+            requestMemory.add(new SystemMessage(systemPrompt));
+            requestMemory.add(new UserMessage(userPrompt));
+            String response = chatModel.generate(requestMemory.messages()).content().text();
             
             // Parse JSON response
             LegalResearchResult result = parseLegalResearch(response, query, jurisdiction);
@@ -294,11 +295,12 @@ public class LegalAiService {
                 docText
             );
             
-            ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(20);
 
-            chatMemory.add(new SystemMessage(systemPrompt));
-            chatMemory.add(new UserMessage(userPrompt));
-            String response = chatModel.generate(chatMemory.messages()).content().text();
+            // Per-request memory  not shared across concurrent calls
+            ChatMemory requestMemory = MessageWindowChatMemory.withMaxMessages(20);
+            requestMemory.add(new SystemMessage(systemPrompt));
+            requestMemory.add(new UserMessage(userPrompt));
+            String response = chatModel.generate(requestMemory.messages()).content().text();
             
             // Parse JSON response
             RiskAssessmentResult result = parseRiskAssessment(response);
@@ -389,11 +391,12 @@ public class LegalAiService {
                 jurisdiction, rulesContext, docText
             );
             
-            ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(20);
 
-            chatMemory.add(new SystemMessage(systemPrompt));
-            chatMemory.add(new UserMessage(userPrompt));
-            String response = chatModel.generate(chatMemory.messages()).content().text();
+            // Per-request memory  not shared across concurrent calls
+            ChatMemory requestMemory = MessageWindowChatMemory.withMaxMessages(20);
+            requestMemory.add(new SystemMessage(systemPrompt));
+            requestMemory.add(new UserMessage(userPrompt));
+            String response = chatModel.generate(requestMemory.messages()).content().text();
             
             // Parse JSON response
             ComplianceValidationResult result = parseComplianceValidation(response, jurisdiction);
