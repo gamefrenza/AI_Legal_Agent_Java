@@ -19,6 +19,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -41,9 +42,6 @@ public class SecurityConfig {
                                                    JwtAuthenticationFilter jwtAuthenticationFilter,
                                                    SessionRegistry sessionRegistry) throws Exception {
         http
-            // Disable CSRF for API endpoints (stateless REST API)
-            .csrf(csrf -> csrf.disable())
-            
             // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
                 // Admin endpoints - ADMIN role only
