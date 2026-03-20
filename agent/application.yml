@@ -48,6 +48,9 @@ compliance:
     file: classpath:compliance-rules.json
     autoload: true
 
+encryption:
+  aes-key: ${ENCRYPTION_KEY:LegalAI-AES256-SecureKey-32chars}
+
 # Cache configuration for performance optimization
 
 logging:
