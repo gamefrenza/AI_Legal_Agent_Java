@@ -42,7 +42,6 @@ public class LegalAiService {
     private ComplianceEngineService complianceEngineService;
 
     private ChatLanguageModel chatModel;
-    private ChatMemory chatMemory;
     private Map<String, String> jurisdictionPrompts;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -63,9 +62,6 @@ public class LegalAiService {
                     .logRequests(true)
                     .logResponses(false)
                     .build();
-            
-            // Initialize in-memory chat memory for conversational context
-            chatMemory = MessageWindowChatMemory.withMaxMessages(20);
             
             logger.info("OpenAI Chat Model initialized successfully");
             
@@ -158,12 +154,10 @@ public class LegalAiService {
             );
             
             // Execute chain with memory
-            chatMemory.add(new SystemMessage(systemPrompt));
-            chatMemory.add(new UserMessage(userPrompt));
-            
-            String response = chatModel.generate(chatMemory.messages()).content().text();
-            
-            chatMemory.add(new AiMessage(response));
+            ChatMemory requestMemory = MessageWindowChatMemory.withMaxMessages(20);
+            requestMemory.add(new SystemMessage(systemPrompt));
+            requestMemory.add(new UserMessage(userPrompt));
+            String response = chatModel.generate(requestMemory.messages()).content().text();
             
             // Parse JSON response
             ContractAnalysisResult result = parseContractAnalysis(response, jurisdiction);
@@ -219,12 +213,11 @@ public class LegalAiService {
                 jurisdiction, query
             );
             
+            ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(20);
+
             chatMemory.add(new SystemMessage(systemPrompt));
             chatMemory.add(new UserMessage(userPrompt));
-            
             String response = chatModel.generate(chatMemory.messages()).content().text();
-            
-            chatMemory.add(new AiMessage(response));
             
             // Parse JSON response
             LegalResearchResult result = parseLegalResearch(response, query, jurisdiction);
@@ -301,12 +294,11 @@ public class LegalAiService {
                 docText
             );
             
+            ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(20);
+
             chatMemory.add(new SystemMessage(systemPrompt));
             chatMemory.add(new UserMessage(userPrompt));
-            
             String response = chatModel.generate(chatMemory.messages()).content().text();
-            
-            chatMemory.add(new AiMessage(response));
             
             // Parse JSON response
             RiskAssessmentResult result = parseRiskAssessment(response);
@@ -397,12 +389,11 @@ public class LegalAiService {
                 jurisdiction, rulesContext, docText
             );
             
+            ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(20);
+
             chatMemory.add(new SystemMessage(systemPrompt));
             chatMemory.add(new UserMessage(userPrompt));
-            
             String response = chatModel.generate(chatMemory.messages()).content().text();
-            
-            chatMemory.add(new AiMessage(response));
             
             // Parse JSON response
             ComplianceValidationResult result = parseComplianceValidation(response, jurisdiction);
