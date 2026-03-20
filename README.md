@@ -51,6 +51,7 @@ export DB_PASS=your_password
 export OPENAI_API_KEY=sk-your-openai-key
 export REDIS_HOST=localhost
 export REDIS_PORT=6379
+export ENCRYPTION_KEY=LegalAI-AES256-SecureKey-32chars   # exactly 32 UTF-8 bytes
 ```
 
 ### 3. Start Dependencies
@@ -221,7 +222,7 @@ Tests use H2 in-memory database and mock dependencies:
 - AOP-based automatic logging
 - Compliance rule engine
 - Jurisdiction-specific validation
-- Blockchain-ready log hashing (commented)
+- SHA-256 hash chaining on every audit log entry (Merkle chain, append-only)
 
 ---
 
@@ -320,7 +321,8 @@ agent/
 ├── src/main/java/com/legalai/agent/
 │   ├── LegalAiAgentApplication.java
 │   ├── config/
-│   │   └── SecurityConfig.java
+│   │   ├── SecurityConfig.java
+│   |   └── EncryptionConfig.java
 │   ├── controller/
 │   │   ├── DocumentController.java
 │   │   ├── AdminController.java
