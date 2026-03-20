@@ -1,4 +1,4 @@
-﻿package com.legalai.agent.service;
+package com.legalai.agent.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
