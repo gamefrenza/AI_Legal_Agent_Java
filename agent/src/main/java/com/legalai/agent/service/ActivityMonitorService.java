@@ -89,7 +89,11 @@ public class ActivityMonitorService {
             }
             
             auditLog.setDetails(details.toString());
-            
+
+            // Wire hash chain for tamper detection
+            auditLog.setContentHash(computeHash(auditLog));
+            auditLog.setPreviousEntryHash(computePreviousHash(auditLog));
+
             // Save to database asynchronously (append-only, immutable)
             auditLogRepository.save(auditLog);
             
@@ -139,8 +143,12 @@ public class ActivityMonitorService {
             details.append("Message: ").append(exception.getMessage());
             
             auditLog.setDetails(details.toString());
-            
-            // Save to database asynchronously
+
+            // Wire hash chain for tamper detection
+            auditLog.setContentHash(computeHash(auditLog));
+            auditLog.setPreviousEntryHash(computePreviousHash(auditLog));
+
+            // Save to database asynchronously (append-only, immutable)
             auditLogRepository.save(auditLog);
             
             logger.debug("Logged failed execution: {} by user: {} - Exception: {}", 
