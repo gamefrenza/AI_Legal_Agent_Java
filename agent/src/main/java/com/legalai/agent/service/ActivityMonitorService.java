@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
 
 /**
  * AOP-based activity monitoring service that logs all service method calls
@@ -407,6 +409,41 @@ public class ActivityMonitorService {
 
         public void setTotalPages(int totalPages) {
             this.totalPages = totalPages;
+        }
+    }
+
+    private String computeHash(AuditLog log) {
+        try {
+            String content = String.join("|",
+                nullSafe(log.getUser()),
+                nullSafe(log.getAction()),
+                log.getTimestamp() != null ? log.getTimestamp().toString() : "",
+                nullSafe(log.getDetails()),
+                nullSafe(log.getOutcome()),
+                nullSafe(log.getMethodName())
+            );
+            byte[] hash = MessageDigest.getInstance("SHA-256")
+                    .digest(content.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte b : hash) hex.append(String.format("%02x", b));
+            return hex.toString();
+        } catch (Exception e) {
+            logger.warn("Hash computation failed: {}", e.getMessage());
+            return "hash-error";
+        }
+    }
+
+    private String nullSafe(String s) { return s != null ? s : ""; }
+
+    // Compute previous hash for Merkle chain
+    private String computePreviousHash(AuditLog log) {
+        try {
+            return auditLogRepository.findFirstByOrderByIdDesc()
+                    .map(AuditLog::getContentHash)
+                    .orElse("GENESIS");
+        } catch (Exception e) {
+            logger.warn("Failed to compute previous hash: {}", e.getMessage());
+            return "hash-error";
         }
     }
 }
