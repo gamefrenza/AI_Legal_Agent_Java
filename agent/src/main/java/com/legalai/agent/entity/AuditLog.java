@@ -36,11 +36,11 @@ public class AuditLog {
     @Column(columnDefinition = "TEXT", updatable = false)
     private String arguments;
 
-    // SHA-256 hash of this entry's content — for tamper detection
+    // SHA-256 hash of this entry's content - for tamper detection
     @Column(length = 64, updatable = false)
     private String contentHash;
 
-    // Hash of the previous entry's contentHash — forms a Merkle chain
+    // Hash of the previous entry's contentHash - forms a Merkle chain
     @Column(length = 64, updatable = false)
     private String previousEntryHash;
 

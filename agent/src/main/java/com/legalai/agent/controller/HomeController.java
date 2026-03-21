@@ -65,15 +65,15 @@ public class HomeController {
             message.append("File: ").append(file.getOriginalFilename()).append(". ");
             
             if (!result.isCompliant()) {
-                message.append("⚠️ Compliance issues detected: ")
+                message.append("[WARNING] Compliance issues detected: ")
                        .append(result.getViolations().size())
                        .append(" violation(s). ");
             } else {
-                message.append("✅ Document is compliant. ");
+                message.append("[OK] Document is compliant. ");
             }
             
             if (result.getProtectionReport().getSensitiveDataCount() > 0) {
-                message.append("🔒 Protected ")
+                message.append("[SECURED] Protected ")
                        .append(result.getProtectionReport().getSensitiveDataCount())
                        .append(" sensitive data item(s). ");
             }
@@ -86,14 +86,14 @@ public class HomeController {
                             legalAiService.analyzeContract(decryptedText, jurisdiction);
                     LegalAiService.ContractAnalysisResult analysisResult = analysisFuture.get();
                     
-                    message.append("🤖 AI Analysis complete: ")
+                    message.append("[AI] AI Analysis complete: ")
                            .append(analysisResult.getRisks().size())
                            .append(" risk(s) identified, ")
                            .append(analysisResult.getAmbiguities().size())
                            .append(" ambiguity(ies) found.");
                 } catch (Exception e) {
                     logger.error("AI analysis failed: {}", e.getMessage(), e);
-                    message.append("⚠️ AI analysis failed: ").append(e.getMessage());
+                    message.append("[WARNING] AI analysis failed: ").append(e.getMessage());
                 }
             }
             

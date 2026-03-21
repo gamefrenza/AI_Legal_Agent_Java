@@ -2,11 +2,11 @@ spring:
   cache:
     type: simple
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER,TIMESTAMP,ACTION
     driver-class-name: org.h2.Driver
     username: sa
-    password: 
-  
+    password:
+
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -14,12 +14,12 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
-  
+
   data:
     redis:
       host: localhost
       port: 6379
-  
+
   session:
     store-type: none
 
@@ -33,4 +33,3 @@ compliance:
 logging:
   level:
     com.legalai: DEBUG
-

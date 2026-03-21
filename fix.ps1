@@ -1,0 +1,1 @@
+$f="agent\src\main\java\com\legalai\agent\service\LegalAiService.java"; $out=Get-Content $f | Where-Object {$_.Trim() -ne "ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(20);"}; Set-Content $f $out -Encoding UTF8; Write-Host "Lines now: $($out.Count)"

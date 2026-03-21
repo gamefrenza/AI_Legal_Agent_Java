@@ -1,19 +1,19 @@
-# 🏛️ Legal AI Agent
+﻿# ðŸ›ï¸ Legal AI Agent
 
 An intelligent document management system powered by OpenAI GPT-4o and LangChain4J for legal document analysis, compliance checking, and risk assessment.
 
-## 🌟 Features
+## ðŸŒŸ Features
 
 ### Core Capabilities
-- **📤 Document Upload & Management** - Parse, encrypt, and store legal documents
-- **🤖 AI-Powered Analysis** - Contract analysis using GPT-4o via LangChain4J
-- **🔍 Legal Research** - AI-assisted legal research with citations
-- **⚖️ Compliance Engine** - Jurisdiction-specific rule validation
-- **🔒 PII Detection** - Automatic detection and redaction of sensitive data
-- **📊 Risk Assessment** - Comprehensive risk scoring (0-10 scale)
-- **🔐 Enterprise Security** - RBAC, encryption, audit logging
-- **📜 Version Control** - Document versioning with JGit
-- **📝 Audit Trail** - Immutable, blockchain-ready audit logs
+- **ðŸ“¤ Document Upload & Management** - Parse, encrypt, and store legal documents
+- **ðŸ¤– AI-Powered Analysis** - Contract analysis using GPT-4o via LangChain4J
+- **ðŸ” Legal Research** - AI-assisted legal research with citations
+- **âš–ï¸ Compliance Engine** - Jurisdiction-specific rule validation
+- **ðŸ”’ PII Detection** - Automatic detection and redaction of sensitive data
+- **ðŸ“Š Risk Assessment** - Comprehensive risk scoring (0-10 scale)
+- **ðŸ” Enterprise Security** - RBAC, encryption, audit logging
+- **ðŸ“œ Version Control** - Document versioning with JGit
+- **ðŸ“ Audit Trail** - Immutable, blockchain-ready audit logs
 
 ### Technologies
 - **Backend:** Spring Boot 3.2.0, Java 17
@@ -26,7 +26,7 @@ An intelligent document management system powered by OpenAI GPT-4o and LangChain
 
 ---
 
-## 🚀 Quick Start
+## ðŸš€ Quick Start
 
 ### Prerequisites
 ```bash
@@ -87,7 +87,116 @@ mvn spring-boot:run
 
 ---
 
-## 👥 Default Users
+## 🐳 Running with Podman (Containers — Recommended)
+
+The easiest way to run the full stack (app + PostgreSQL + Redis) locally is with Podman. No need to install Java, Maven, PostgreSQL, or Redis on your machine.
+
+### Prerequisites
+
+| Tool | Install |
+|---|---|
+| **Podman Desktop** | https://podman.io/getting-started/installation |
+| **podman-compose** | `pip install podman-compose` *(or use Podman 4.7+ built-in `podman compose`)* |
+
+Start the Podman machine (Windows/macOS):
+```powershell
+podman machine start
+```
+
+### 1. Configure Secrets
+
+Copy the example env file and fill in your values:
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
+
+Edit `.env`:
+```env
+# Required
+OPENAI_API_KEY=sk-...your-openai-key...
+DB_USER=legalai
+DB_PASS=changeme_use_strong_password
+
+# Optional — leave blank for no Redis password
+REDIS_PASSWORD=
+
+# Optional — must be exactly 32 UTF-8 characters
+ENCRYPTION_KEY=LegalAI-AES256-SecureKey-32chars
+```
+
+> ⚠️ **Never commit `.env` to source control.** It is already excluded via `.dockerignore`.
+
+### 2. Build and Start All Services
+
+```powershell
+podman compose up --build
+```
+
+This starts three containers:
+
+| Container | Image | Exposed Port |
+|---|---|---|
+| `postgres` | `postgres:16-alpine` | internal only |
+| `redis` | `redis:7-alpine` | internal only |
+| `app` | built from `Dockerfile` | `8080 → 8080` |
+
+The app waits for PostgreSQL and Redis health checks to pass before starting. The first build downloads Maven dependencies and may take a few minutes.
+
+### 3. Access the Application
+
+| Interface | URL |
+|---|---|
+| Thymeleaf UI | http://localhost:8080/ |
+| SPA Dashboard | http://localhost:8080/static/index.html |
+
+Log in with any of the default users listed in the next section.
+
+### Useful Commands
+
+```powershell
+# View live logs for the app
+podman compose logs -f app
+
+# Stop all containers (keeps data volumes)
+podman compose down
+
+# Stop and wipe all data (DB + Redis volumes — destructive)
+podman compose down -v
+
+# Rebuild only the app after a code change
+podman compose up --build app
+
+# Open a shell inside the running app container
+podman exec -it ai_legal_agent_java-main-app-1 sh
+```
+
+### Podman Troubleshooting
+
+**App fails to connect to PostgreSQL or Redis**
+```powershell
+podman compose logs postgres
+podman compose logs redis
+# Check health status
+podman inspect ai_legal_agent_java-main-postgres-1 --format "{{.State.Health.Status}}"
+```
+
+**Port 8080 already in use**
+```powershell
+# Find conflicting process (Windows)
+netstat -ano | findstr :8080
+# Or change the host port in compose.yaml: "8081:8080"
+```
+
+**Podman machine not running (Windows/macOS)**
+```powershell
+podman machine start
+podman machine status
+```
+
+---
+
+## ðŸ‘¥ Default Users
 
 | Username | Password | Roles | Capabilities |
 |----------|----------|-------|--------------|
@@ -97,7 +206,7 @@ mvn spring-boot:run
 
 ---
 
-## 📚 API Documentation
+## ðŸ“š API Documentation
 
 ### Document Endpoints
 
@@ -180,7 +289,7 @@ Response:
 
 ---
 
-## 🧪 Running Tests
+## ðŸ§ª Running Tests
 
 ```bash
 # Run all tests
@@ -202,7 +311,7 @@ Tests use H2 in-memory database and mock dependencies:
 
 ---
 
-## 🔐 Security Features
+## ðŸ” Security Features
 
 ### Authentication & Authorization
 - BCrypt password hashing
@@ -226,58 +335,58 @@ Tests use H2 in-memory database and mock dependencies:
 
 ---
 
-## 📊 Architecture
+## ðŸ“Š Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Client Layer                              │
-│  ┌──────────────────┐           ┌───────────────────┐          │
-│  │  Thymeleaf UI    │           │   SPA Dashboard   │          │
-│  │  (Server-side)   │           │  (Client-side)    │          │
-│  └──────────────────┘           └───────────────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Controller Layer                            │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌────────────┐   │
-│  │ HomeController   │  │ DocumentController│  │AdminController│ │
-│  │  (Thymeleaf)     │  │   (REST API)      │  │  (Admin)    │  │
-│  └──────────────────┘  └──────────────────┘  └────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                       Service Layer                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐     │
-│  │DocumentService│  │LegalAiService│  │ComplianceEngine│      │
-│  └──────────────┘  └──────────────┘  └──────────────────┘     │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐     │
-│  │ RBAC Service │  │ActivityMonitor│  │ Session Service  │     │
-│  └──────────────┘  └──────────────┘  └──────────────────┘     │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Repository Layer                              │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌────────────┐   │
-│  │DocumentRepository│  │ComplianceRuleRepo│  │AuditLogRepo│   │
-│  └──────────────────┘  └──────────────────┘  └────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     Data Layer                                   │
-│  ┌──────────────┐  ┌──────────┐  ┌─────────┐  ┌──────────┐   │
-│  │ PostgreSQL   │  │  Redis   │  │ OpenAI  │  │  Tika    │   │
-│  │  (Docs)      │  │(Sessions)│  │(GPT-4o) │  │(Parsing) │   │
-│  └──────────────┘  └──────────┘  └─────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                        Client Layer                              â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”           â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”          â”‚
+â”‚  â”‚  Thymeleaf UI    â”‚           â”‚   SPA Dashboard   â”‚          â”‚
+â”‚  â”‚  (Server-side)   â”‚           â”‚  (Client-side)    â”‚          â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜           â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜          â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                              â”‚
+                              â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                      Controller Layer                            â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚ HomeController   â”‚  â”‚ DocumentControllerâ”‚  â”‚AdminControllerâ”‚ â”‚
+â”‚  â”‚  (Thymeleaf)     â”‚  â”‚   (REST API)      â”‚  â”‚  (Admin)    â”‚  â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                              â”‚
+                              â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                       Service Layer                              â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”‚
+â”‚  â”‚DocumentServiceâ”‚  â”‚LegalAiServiceâ”‚  â”‚ComplianceEngineâ”‚      â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”‚
+â”‚  â”‚ RBAC Service â”‚  â”‚ActivityMonitorâ”‚  â”‚ Session Service  â”‚     â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                              â”‚
+                              â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                    Repository Layer                              â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚DocumentRepositoryâ”‚  â”‚ComplianceRuleRepoâ”‚  â”‚AuditLogRepoâ”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                              â”‚
+                              â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                     Data Layer                                   â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚ PostgreSQL   â”‚  â”‚  Redis   â”‚  â”‚ OpenAI  â”‚  â”‚  Tika    â”‚   â”‚
+â”‚  â”‚  (Docs)      â”‚  â”‚(Sessions)â”‚  â”‚(GPT-4o) â”‚  â”‚(Parsing) â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
 
-## 🔧 Configuration
+## ðŸ”§ Configuration
 
 ### application.yml
 ```yaml
@@ -314,55 +423,55 @@ logging:
 
 ---
 
-## 📝 Project Structure
+## ðŸ“ Project Structure
 
 ```
 agent/
-├── src/main/java/com/legalai/agent/
-│   ├── LegalAiAgentApplication.java
-│   ├── config/
-│   │   ├── SecurityConfig.java
-│   |   └── EncryptionConfig.java
-│   ├── controller/
-│   │   ├── DocumentController.java
-│   │   ├── AdminController.java
-│   │   └── HomeController.java
-│   ├── entity/
-│   │   ├── Document.java
-│   │   ├── ComplianceRule.java
-│   │   └── AuditLog.java
-│   ├── repository/
-│   │   ├── DocumentRepository.java
-│   │   ├── ComplianceRuleRepository.java
-│   │   └── AuditLogRepository.java
-│   ├── service/
-│   │   ├── DocumentService.java
-│   │   ├── LegalAiService.java
-│   │   ├── ComplianceEngineService.java
-│   │   ├── RoleBasedAccessService.java
-│   │   ├── ActivityMonitorService.java
-│   │   ├── SessionService.java
-│   │   └── DocumentVersionService.java
-│   └── security/
-│       └── JwtAuthenticationFilter.java
-├── src/main/resources/
-│   ├── application.yml
-│   ├── static/
-│   │   ├── index.html
-│   │   ├── css/styles.css
-│   │   └── js/app.js
-│   └── templates/
-│       └── index.html
-└── src/test/
-    ├── java/com/legalai/agent/service/
-    │   └── DocumentServiceTest.java
-    └── resources/
-        └── application-test.yml
+â”œâ”€â”€ src/main/java/com/legalai/agent/
+â”‚   â”œâ”€â”€ LegalAiAgentApplication.java
+â”‚   â”œâ”€â”€ config/
+â”‚   â”‚   â”œâ”€â”€ SecurityConfig.java
+â”‚   |   â””â”€â”€ EncryptionConfig.java
+â”‚   â”œâ”€â”€ controller/
+â”‚   â”‚   â”œâ”€â”€ DocumentController.java
+â”‚   â”‚   â”œâ”€â”€ AdminController.java
+â”‚   â”‚   â””â”€â”€ HomeController.java
+â”‚   â”œâ”€â”€ entity/
+â”‚   â”‚   â”œâ”€â”€ Document.java
+â”‚   â”‚   â”œâ”€â”€ ComplianceRule.java
+â”‚   â”‚   â””â”€â”€ AuditLog.java
+â”‚   â”œâ”€â”€ repository/
+â”‚   â”‚   â”œâ”€â”€ DocumentRepository.java
+â”‚   â”‚   â”œâ”€â”€ ComplianceRuleRepository.java
+â”‚   â”‚   â””â”€â”€ AuditLogRepository.java
+â”‚   â”œâ”€â”€ service/
+â”‚   â”‚   â”œâ”€â”€ DocumentService.java
+â”‚   â”‚   â”œâ”€â”€ LegalAiService.java
+â”‚   â”‚   â”œâ”€â”€ ComplianceEngineService.java
+â”‚   â”‚   â”œâ”€â”€ RoleBasedAccessService.java
+â”‚   â”‚   â”œâ”€â”€ ActivityMonitorService.java
+â”‚   â”‚   â”œâ”€â”€ SessionService.java
+â”‚   â”‚   â””â”€â”€ DocumentVersionService.java
+â”‚   â””â”€â”€ security/
+â”‚       â””â”€â”€ JwtAuthenticationFilter.java
+â”œâ”€â”€ src/main/resources/
+â”‚   â”œâ”€â”€ application.yml
+â”‚   â”œâ”€â”€ static/
+â”‚   â”‚   â”œâ”€â”€ index.html
+â”‚   â”‚   â”œâ”€â”€ css/styles.css
+â”‚   â”‚   â””â”€â”€ js/app.js
+â”‚   â””â”€â”€ templates/
+â”‚       â””â”€â”€ index.html
+â””â”€â”€ src/test/
+    â”œâ”€â”€ java/com/legalai/agent/service/
+    â”‚   â””â”€â”€ DocumentServiceTest.java
+    â””â”€â”€ resources/
+        â””â”€â”€ application-test.yml
 ```
 
 ---
 
-## 🎯 Use Cases
+## ðŸŽ¯ Use Cases
 
 ### 1. Contract Analysis
 ```bash
@@ -399,7 +508,7 @@ curl -X POST http://localhost:8080/docs/redact \
 
 ---
 
-## 🛠️ Troubleshooting
+## ðŸ› ï¸ Troubleshooting
 
 ### Common Issues
 
@@ -433,13 +542,13 @@ curl https://api.openai.com/v1/models \
 
 ---
 
-## 📄 License
+## ðŸ“„ License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-## 🤝 Contributing
+## ðŸ¤ Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -449,13 +558,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## 📧 Contact
+## ðŸ“§ Contact
 
 For questions or support, please contact the development team.
 
 ---
 
-## 🙏 Acknowledgments
+## ðŸ™ Acknowledgments
 
 - OpenAI for GPT-4o
 - LangChain4J for AI integration
@@ -465,5 +574,5 @@ For questions or support, please contact the development team.
 
 ---
 
-**Built with ❤️ for the legal industry**
+**Built with â¤ï¸ for the legal industry**
 
